@@ -5,9 +5,7 @@ export const userApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: 'http://localhost:5000/api/user/',
     prepareHeaders: (headers) => {
-      console.log('headers-----', localStorage.getItem('token'))
       headers.set('authorization', `Bearer ${localStorage.getItem('token')}`)
-
       return headers
     },
   }),
@@ -18,11 +16,7 @@ export const userApi = createApi({
         method: 'POST',
         body: data,
       }),
-      transformResponse: (response: any) => {
-        const token = response.token
-        localStorage.setItem('token', token) // Сохраняем токен в localStorage
-        return response.token
-      },
+      transformResponse: (response: any) => response.token,
     }),
     registration: builder.mutation({
       query: (data) => ({

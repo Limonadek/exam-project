@@ -53,12 +53,12 @@ class ApplicationController {
 
     async updateStatusApplication(req, res, next) {
         try {
-            const {carNumber, isAccepted} = req.body;
-            if (!carNumber) {
-                return next(ApiError.badRequest('Не указан номер машины'));
+            const {id, isAccepted} = req.body;
+            if (!id) {
+                return next(ApiError.badRequest('Не найдена заявка'));
             }
 
-            const application = await Application.update({status: isAccepted ? 'Принят' : 'Отклонен'}, {where: {carNumber}})
+            const application = await Application.update({status: isAccepted ? 'Принят' : 'Отклонен'}, {where: {id}})
 
             return res.json({application})
         } catch(e) {

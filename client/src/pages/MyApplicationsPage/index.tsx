@@ -18,21 +18,14 @@ import ClearIcon from '@mui/icons-material/Clear'
 import { useNavigate } from 'react-router-dom'
 import { DataPagination } from '../../components/DataPagination'
 import { userSelector } from '../../__redux__/selectors/userSelectors.ts'
+import { LoadingSpinnerPage } from '../LoadingSpinnerPage/index.tsx'
 
 export const MyApplicationsPage = () => {
   const itemsPerPage = 5
   const [page, setPage] = useState(1)
   const user = useSelector(userSelector)
 
-  console.log(user.role)
-
-  const { data: userData, refetch: userDataRefetch } = useGetByUserQuery(
-    user.id
-  )
-  const { data: allData, refetch: allDataRefetch } = useGetAllQuery({})
-
-  const data = user.role === 'USER' ? userData : allData
-  // const isLoading = user.role === 'USER' ? isUserDataLoading : isAllDataLoading
+  const { data, isLoading, refetch } = user.role === 'USER' ? useGetByUserQuery(user.id) : useGetAllQuery({});
 
   const [updateStatusApplication] = useUpdateStatusApplicationMutation()
 
@@ -47,26 +40,25 @@ export const MyApplicationsPage = () => {
   }
 
   const handleUpdateStatus = (
-    carNumber: string,
+    id: string,
     isAccepted: boolean,
     event: MouseEvent<HTMLButtonElement>
   ) => {
     event.stopPropagation()
-    updateStatusApplication({ carNumber, isAccepted })
-    allDataRefetch()
+    updateStatusApplication({ id , isAccepted })
+    refetch();
+  }
+
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text
+    return text.slice(0, maxLength) + '...'
   }
 
   const navigate = useNavigate()
 
-  console.log(data)
-
   useEffect(() => {
-    if (user.role === 'USER' && userDataRefetch) {
-      userDataRefetch()
-    } else if (allDataRefetch) {
-      allDataRefetch()
-    }
-  }, [user.role, userDataRefetch, allDataRefetch])
+    refetch();
+  }, [data])
 
   return (
     <Container>
@@ -74,72 +66,75 @@ export const MyApplicationsPage = () => {
         Мои заявления
       </Typography>
       <div>
-        {!data && <Typography>Актуальные заявления отсутствуют</Typography>}
-        <List>
-          {data && (
-            <>
-              {getDataSlice().map((application) => (
-                <ListItem
-                  key={application.id}
-                  onClick={() => navigate(`/application/${application.id}`)}
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'start',
-                    backgroundColor:
-                      application.status === 'Принят'
-                        ? '#8bc34a5c'
-                        : application.status === 'Отклонен'
-                          ? '#ff572273'
-                          : '#E0E0E0',
-                    borderRadius: '5px',
-                    padding: '10px',
-                    marginBottom: '10px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <ListItemText>
-                    <strong>Номер автомобиля:</strong> {application.carNumber}
-                  </ListItemText>
-                  <ListItemText>
-                    <strong>Описание:</strong> {application.description}
-                  </ListItemText>
-                  <ListItemText>
-                    <strong>Статус:</strong> {application.status}
-                  </ListItemText>
-                  {application.status === 'В ожидании' &&
-                    user.role !== 'USER' && (
-                      <>
-                        <IconButton
-                          onClick={(e) =>
-                            handleUpdateStatus(application.carNumber, true, e)
-                          }
-                          size="small"
-                        >
-                          <DoneIcon fontSize="small" color="success" />
-                        </IconButton>
-                        <IconButton
-                          onClick={(e) =>
-                            handleUpdateStatus(application.carNumber, false, e)
-                          }
-                          size="small"
-                        >
-                          <ClearIcon fontSize="small" color="error" />
-                        </IconButton>
-                      </>
-                    )}
-                </ListItem>
-              ))}
-            </>
-          )}
-        </List>
-        {data && data.application.length && (
-          <DataPagination
-            pageCount={Math.ceil(data.application.length / itemsPerPage)}
-            currentPage={page}
-            onPageChange={handleChange}
-          />
-        )}
+        {
+          isLoading ? <LoadingSpinnerPage /> : (
+            <List>
+              {!data || data.application.length == 0 ? <Typography>Актуальные заявления отсутствуют</Typography> :
+                <>
+                  {getDataSlice().map((application: any) => (
+                    <ListItem
+                      key={application.id}
+                      onClick={() => navigate(`/application/${application.id}`)}
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'start',
+                        backgroundColor:
+                          application.status === 'Принят'
+                            ? '#8bc34a5c'
+                            : application.status === 'Отклонен'
+                              ? '#ff572273'
+                              : '#E0E0E0',
+                        borderRadius: '5px',
+                        padding: '10px',
+                        marginBottom: '10px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <ListItemText>
+                        <strong>Номер автомобиля:</strong> {application.carNumber}
+                      </ListItemText>
+                      <ListItemText sx={{ overflowWrap: 'anywhere' }}>
+                        <strong>Описание:</strong> {truncateText(application.description, 100)}
+                      </ListItemText>
+                      <ListItemText>
+                        <strong>Статус:</strong> {application.status}
+                      </ListItemText>
+                      {application.status === 'В ожидании' &&
+                        user.role !== 'USER' && (
+                          <>
+                            <IconButton
+                              onClick={(e) =>
+                                handleUpdateStatus(application.id, true, e)
+                              }
+                              size="small"
+                            >
+                              <DoneIcon fontSize="small" color="success" />
+                            </IconButton>
+                            <IconButton
+                              onClick={(e) =>
+                                handleUpdateStatus(application.id, false, e)
+                              }
+                              size="small"
+                            >
+                              <ClearIcon fontSize="small" color="error" />
+                            </IconButton>
+                          </>
+                        )}
+                    </ListItem>
+                  ))}
+                  {data && data.application.length && (
+                    <DataPagination
+                      pageCount={Math.ceil(data.application.length / itemsPerPage)}
+                      currentPage={page}
+                      onPageChange={handleChange}
+                    />
+                  )}
+                </>
+              }
+            </List>
+          )
+        }
       </div>
     </Container>
   )

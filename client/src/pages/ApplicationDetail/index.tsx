@@ -4,16 +4,17 @@ import {
   useGetAllQuery,
   useGetByUserQuery,
 } from '../../__redux__/services/application.ts'
+import { userSelector } from '../../__redux__/selectors/userSelectors.ts'
 
 function ApplicationDetails() {
   const { id } = useParams()
-  const user = useSelector((state) => state.userSlice)
+  const user = useSelector(userSelector)
 
   const { data } =
-    user.role === 'USER' ? useGetByUserQuery(user.id) : useGetAllQuery()
+    user.role === 'USER' ? useGetByUserQuery(user.id) : useGetAllQuery({})
   let application
   if (data) {
-    application = data.application.find((app) => app.id.toString() === id)
+    application = data.application.find((app: any) => app.id.toString() === id)
   }
 
   return (
@@ -22,7 +23,7 @@ function ApplicationDetails() {
         <div>
           <h1>Детали заявления</h1>
           <p>Номер автомобиля: {application.carNumber}</p>
-          <p>Описание: {application.description}</p>
+          <p style={{ overflowWrap: 'anywhere' }}>Описание: {application.description}</p>
           <p>Статус: {application.status}</p>
         </div>
       ) : (

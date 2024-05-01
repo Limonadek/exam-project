@@ -2,21 +2,18 @@ const ApiError = require('../error/ApiError.js');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const {Users} = require('../models/models.js');
-const { SECRET_KEY } = require('../const.js');
 
 const generateJwt = (id, fio, login, phone, email, password, role) => {
     return jwt.sign(
                 {id, fio, login, phone, email, password, role}, 
-                String(SECRET_KEY),
+                String(process.env.SECRET_KEY),
                 {expiresIn: '24h'}
             );
 }
 
 class UserController {
     async registration(req, res, next) {
-        console.log(req)
         const {email, password, fio, phone, login} = req.body;
-        console.log(email, password, fio, phone, login)
         if (!email || !password || !phone || !login || !fio) {
             return next(ApiError.badRequest('Не заполнены обязательные поля'));
         }

@@ -3,17 +3,17 @@ import { Container, TextField, Typography, Box } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { useCreateApplicationMutation } from '../../__redux__/services/application';
 import { useSelector } from 'react-redux';
+import { userSelector } from '../../__redux__/selectors/userSelectors';
 
 export const CreateApplicationPage = () => {
     const [carRegistration, setCarRegistration] = useState('');
     const [violationDescription, setViolationDescription] = useState('');
 
     const [createApplication, {isLoading}] = useCreateApplicationMutation();
-    const user = useSelector(state => state.userSlice)
+    const user = useSelector(userSelector)
 
     const handleSubmit = async (event: any) => {
         event.preventDefault();
-        // Обработка данных формы
 
         createApplication({carNumber: carRegistration, description: violationDescription, userId: user.id}).then(() => {
           alert('Заявка отправлена')

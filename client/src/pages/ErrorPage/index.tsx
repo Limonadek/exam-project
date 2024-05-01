@@ -2,17 +2,24 @@ import { Button } from '@mui/material'
 import { ErrorPageContainer } from './errorPage.ts'
 import { useNavigate } from 'react-router-dom'
 
-export const ErrorPage = () => {
-
+export const ErrorPage = ({isAuthError, notRouting}: any) => {
   const navigate = useNavigate();
-
   return (
     <>
       <ErrorPageContainer>
         <h1>Упс!</h1>
-        <p>Вы не вошли в аккаунт :(</p>
-        <Button variant="contained" onClick={() => navigate('/login')} color="primary">
-          перейти на страницу авторизации
+        {notRouting ? (
+          <p>Страница не найдена</p>
+        ) : (
+          <p>{isAuthError ? 'Вы не вошли в аккаунт :(' : 'Что то пошло не так'}</p>
+        )}
+        <Button variant="contained" onClick={() => {
+          notRouting ? navigate('/applications') : 
+          isAuthError ? navigate('/login') : location.reload()
+        }} color="primary">
+          {notRouting ? 'Перейти на главную страницу' : 
+            isAuthError ? 'перейти на страницу авторизации' : 'Обновить страницу'
+          }
         </Button>
       </ErrorPageContainer>
     </>
